@@ -158,8 +158,15 @@ def display_song_details(song_row):
 
 # Reset the session state variables for new input
 def reset_session_state():
+    """Reset the session state variables for new input."""
+    for key in list(st.session_state.keys()):
+        del st.session_state[key]  # Remove all session state variables
+
+    # Initialize a new empty text input state
     st.session_state["submit_pressed"] = False
     st.session_state["selected_song"] = None
+    st.session_state["song_confirmed"] = False
+    st.session_state["user_input"] = ""  # Clear the input field
 
 
 # Pre-fill the input field with the suggested song
@@ -186,7 +193,7 @@ with col1:
     st.image("assets/k-recs_logo02.svg", width=350)
 
 st.title("A Song Recommender App!")
-st.write("Hi there! Welcome to the K-Recs Song Recomender.")
+st.write("Hi there! Welcome to the K-Recs Song Recommender.")
 st.write("Give us a song, and we’ll find recommendations for you. 🎵")
 
 # Input field for song title
@@ -198,8 +205,13 @@ user_input = st.text_input(
 
 # Submit button
 if st.button("Submit"):
-    st.session_state["submit_pressed"] = True
-    st.session_state["selected_song"] = user_input
+    if not user_input.strip():  # Check if the input is empty or just whitespace
+        st.warning(
+            "Please enter a song title before submitting."
+        )  # Display a warning message
+    else:
+        st.session_state["submit_pressed"] = True
+        st.session_state["selected_song"] = user_input
 
 
 # Function to handle song confirmation and display recommendations
@@ -210,6 +222,9 @@ def handle_song_confirmation(song_row):
         songs_df, song_row
     )  # Pass the song_row directly
     display_recommendations(recommended_songs)
+
+    # Clear the confirmation state to prevent re-displaying
+    st.session_state["song_confirmed"] = True  # Mark the song as confirmed
 
 
 # Function to display song details and confirmation buttons
@@ -223,26 +238,31 @@ def display_song_confirmation(song_row):
 
     with col_yes:
         if st.button("Yes, this is the one!", key="yes_button"):
-            st.session_state["song_confirmed"] = True
             handle_song_confirmation(
                 song_row
             )  # Call the function to handle confirmation
 
     with col_no:
         if st.button("No, re-enter input", key="no_button"):
-            reset_session_state()
-            prefill_input(user_input, songs_df)
+            reset_session_state()  # Call the reset function to clear everything
+            st.session_state["user_input"] = ""  # Clear the input field explicitly
 
 
 # Main logic for handling user input and displaying results
 if st.session_state["submit_pressed"]:
     user_input = st.session_state["selected_song"]
     if user_input:
+        # Get song details
         song_row = get_song_details(user_input, songs_df)
         if not song_row.empty:
-            display_song_confirmation(
-                song_row
-            )  # Call the new function to display confirmation
+            # Only show confirmation buttons if song is not yet confirmed
+            if not st.session_state.get("song_confirmed", False):
+                display_song_confirmation(
+                    song_row
+                )  # Call the new function to display confirmation
+            else:
+                # If the song has been confirmed, do not show the confirmation UI again
+                st.write("Thank you for confirming the song!")
         else:
             st.write(f"Sorry, '{user_input}' not found in the database.")
             suggestions = songs_df[
