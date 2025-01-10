@@ -5,7 +5,7 @@ import pandas as pd
 @st.cache_data
 def load_data():
     try:
-        return pd.read_csv('data/clean/7_clustered_dataset.csv')
+        return pd.read_csv("data/clean/7_clustered_dataset.csv")
     except FileNotFoundError:
         st.error("The dataset file could not be found. Please check the file path.")
         return pd.DataFrame()  # Return an empty DataFrame if file not found
@@ -28,9 +28,9 @@ if 'selected_song' not in st.session_state:
 songs_df = load_data()
 
 # Streamlit app UI
-col1, col2 = st.columns([2, 7])  # Adjust the column width ratios
+col1, col2 = st.columns([2, 7]) 
 with col1:
-    st.image('assets/k-recs_logo02.svg', width=350)
+    st.image("assets/k-recs_logo02.svg", width=350)
 
 
 st.title("A Song Recommender App!")
@@ -54,6 +54,7 @@ if st.session_state['submit_pressed']:
         if not song_row.empty:
             song_name = song_row.iloc[0]['title']
             artist_name = song_row.iloc[0]['artist']
+            album = song_row.iloc[0]['album']
             release_year = song_row.iloc[0].get('year', 'Unknown')
             album_cover = song_row.iloc[0].get('album_cover', None)
             song_cluster = song_row.iloc[0].get('cluster', None)
@@ -62,13 +63,15 @@ if st.session_state['submit_pressed']:
             col1, col2 = st.columns([1, 3])
             with col1:
                 if album_cover:
-                    st.image(album_cover, caption=f"Album Cover for {song_name}", width=100)
+                    st.image(album_cover, width=150)
                 else:
                     st.write("No album cover available.")
             with col2:
                 st.markdown(f"### {song_name}")
-                st.markdown(f"**Artist**: {artist_name}")
-                st.markdown(f"**Release Year**: {release_year}")
+                st.markdown(f"**{artist_name}**")
+                st.markdown(f"Album: {album}")
+                if release_year != 'Unknown':
+                    st.markdown(f"**Release Year**: {release_year}")    # conditionally display release year if it's not unknown
             
             # Ask if this is the correct song
             st.write("---")
@@ -95,7 +98,6 @@ if st.session_state['submit_pressed']:
                     # Reset specific state variables
                     st.session_state['submit_pressed'] = False
                     st.session_state['selected_song'] = None
-                    st.write("State has been reset. Please re-enter a song title.")
 
                     # Pre-fill the input field with the suggested song
                     suggestions = songs_df[songs_df['title'].str.contains(user_input[:3], case=False, na=False)].head(1)
@@ -110,8 +112,7 @@ if st.session_state['submit_pressed']:
             st.session_state['user_input'] = suggestions.iloc[0]['title']
         else:
             st.session_state['user_input'] = ""  # Clear input if no suggestion is found
-        
-        st.write("State has been reset. Please re-enter a song title.")
+
 
 
     else:
