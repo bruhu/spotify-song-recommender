@@ -156,7 +156,7 @@ def display_song_details(song_row):
             st.markdown(f"**Release Year**: {release_year}")
 
 
-# Reset the session state variables for new input
+# Function to reset the session state variables for new input
 def reset_session_state():
     """Reset the session state variables for new input."""
     for key in list(st.session_state.keys()):
@@ -225,6 +225,7 @@ def handle_song_confirmation(song_row):
 
     # Clear the confirmation state to prevent re-displaying
     st.session_state["song_confirmed"] = True  # Mark the song as confirmed
+    st.toast("Thank you for confirming the song!", icon="✅")  # Show toast message here
 
 
 # Function to display song details and confirmation buttons
@@ -245,7 +246,6 @@ def display_song_confirmation(song_row):
     with col_no:
         if st.button("No, re-enter input", key="no_button"):
             reset_session_state()  # Call the reset function to clear everything
-            st.session_state["user_input"] = ""  # Clear the input field explicitly
 
 
 # Main logic for handling user input and displaying results
@@ -260,9 +260,6 @@ if st.session_state["submit_pressed"]:
                 display_song_confirmation(
                     song_row
                 )  # Call the new function to display confirmation
-            else:
-                # If the song has been confirmed, do not show the confirmation UI again
-                st.write("Thank you for confirming the song!")
         else:
             st.write(f"Sorry, '{user_input}' not found in the database.")
             suggestions = songs_df[
