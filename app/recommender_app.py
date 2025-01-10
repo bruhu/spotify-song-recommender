@@ -241,10 +241,12 @@ if st.session_state["submit_pressed"]:
                         reset_session_state()
                         prefill_input(user_input, songs_df)
             else:
-                # If the song has been confirmed, display the recommendations
+                # If the song has been confirmed, clear the confirmation message
+                st.write("---")  # Optional: Add a separator line
+                # Display the recommendations
                 recommended_songs = get_recommendations(
-                    songs_df
-                )  # Call with only the DataFrame
+                    songs_df, song_row  # Pass the song_row directly
+                )
                 display_recommendations(recommended_songs)
 
         else:
