@@ -30,16 +30,15 @@ def get_song_details(title, df):
         return result
     else:
         # If the song is not found, call the function to search on Spotify
-        spotify_data = search_track_info(title)  # You might need to adjust this depending on the function signature
+        spotify_data = search_track_info(title)  # Ensure this function is correctly defined and imported
         
-        if spotify_data:
+        if spotify_data is not None:
             # Assuming spotify_data is a dictionary or some structure that contains necessary details
             # Convert spotify data into a pandas DataFrame format that matches your dataset structure
             spotify_df = pd.DataFrame([spotify_data])
             return spotify_df
         else:
-            return pd.DataFrame()
-
+            return pd.DataFrame()  # Return an empty DataFrame if no data is found
 
 # Function to get recommendations based on cluster
 def get_recommendations(cluster, df, exclude_title):
@@ -60,7 +59,7 @@ def display_song_details(song_row):
     col1, col2 = st.columns([1, 3])
     with col1:
         if album_cover:
-            st.image(album_cover, width=150)
+            st.image(album_cover, width=180)
         else:
             st.write("No album cover available.")
     with col2:

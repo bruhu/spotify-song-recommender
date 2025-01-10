@@ -5,40 +5,8 @@ from spotipy.oauth2 import SpotifyClientCredentials
 from sklearn.cluster import KMeans
 import streamlit as st
 
-
-# def search_track_info(input_title, input_artist):
-#     client_id = os.getenv("SPOTIFY_CLIENT_ID") or st.secrets["SPOTIFY_CLIENT_ID"]
-#     client_secret = os.getenv("SPOTIFY_CLIENT_SECRET") or st.secrets["SPOTIFY_CLIENT_SECRET"]
-
-#     sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(client_id=client_id, client_secret=client_secret))
-
-#     response = sp.search(q=f'track:{input_title} artist:{input_artist}', type='track', limit=1)
-
-#     if response["tracks"]["total"] == 0: return None
-
-#     track = response["tracks"]["items"][0]
-#     track_title = track["name"]
-#     track_popularity = track["popularity"]
-
-#     artist = sp.artist(track["artists"][0]["id"])
-#     artist_name = artist["name"]
-#     artist_genres = artist["genres"]
-
-#     album = sp.album(response["tracks"]["items"][0]["album"]["id"])
-#     album_popularity = album["popularity"]
-
-#     result = {
-#         "title": track_title,
-#         "artist": artist_name,
-#         "popularity": track_popularity,
-#         "album_popularity": album_popularity,
-#         "genres": artist_genres
-#     }
-
-#     return result
-
 def search_track_info(input_title):
-    """Fetch song details from Spotify including song title, album cover, album name, and release date."""
+    """Fetch song details from Spotify including song title, album cover, album name, release date, and genres."""
     
     # Get Spotify client credentials from environment or secrets
     client_id = os.getenv("SPOTIFY_CLIENT_ID") or st.secrets["SPOTIFY_CLIENT_ID"]
@@ -47,11 +15,15 @@ def search_track_info(input_title):
     # Initialize Spotipy with client credentials
     sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(client_id=client_id, client_secret=client_secret))
 
-    # Perform track search on Spotify using only the input song title
-    response = sp.search(q=f'track:{input_title}', type='track', limit=1)
+    # Perform track search on Spotify using the input song title
+    try:
+        response = sp.search(q=f'track:{input_title}', type='track', limit=1)
+    except Exception as e:
+        st.error(f"Error fetching data from Spotify: {e}")
+        return None
 
     # Return None if no tracks are found
-    if response["tracks"]["total"] == 0: 
+    if response["tracks"]["total"] == 0:
         return None
 
     # Extract track details
@@ -62,27 +34,22 @@ def search_track_info(input_title):
     # Fetch artist details
     artist = sp.artist(track["artists"][0]["id"])
     artist_name = artist["name"]
-    artist_genres = artist["genres"]
+    artist_genres = artist.get("genres", [])
     
     # Fetch album details
-    album = sp.album(track["album"]["id"])
-    album_name = album["name"]
-    album_cover = album["images"][0]["url"]  # The first image is usually the album cover
-    album_release_date = album["release_date"]
-    album_popularity = album["popularity"]
-    
+    album = track['album']['name']
+    release_date = track['album']['release_date']
+    album_cover = track['album']['images'][1]['url'] if len(track['album']['images']) > 1 else None  # Fallback if no image
+
     # Construct the result dictionary with the requested fields
     result = {
         "title": track_title,
         "artist": artist_name,
-        "popularity": track_popularity,
-        "album_name": album_name,
+        "album": album,
         "album_cover": album_cover,
-        "album_release_date": album_release_date,
-        "album_popularity": album_popularity,
-        "genres": artist_genres
+        "year": release_date,
+        "genres": artist_genres  # Include genres if needed
     }
-
     return result
 
 
