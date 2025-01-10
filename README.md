@@ -1,4 +1,6 @@
-# K-Recs Song Recommender App
+![K-Recs Logo](assets/k-recs_logo02.svg)
+
+# K-Recs - A Song Recommender App
 
 ## Description
 K-Recs is a song recommender application that allows users to input a song title and receive recommendations based on the song's characteristics. The app utilizes a dataset of songs with various features and integrates with the Spotify API to fetch additional song details.
@@ -25,8 +27,8 @@ K-Recs is a song recommender application that allows users to input a song title
 ### Steps
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/k-recs.git
-   cd k-recs
+   git clone https://github.com/bruhu/spotify-song-recommender.git
+   cd spotify-song-recommender
    ```
 
 2. Create a virtual environment (optional but recommended):
