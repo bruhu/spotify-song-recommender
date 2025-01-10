@@ -1,4 +1,6 @@
-# K-Recs Song Recommender App
+![K-Recs Logo](assets/k-recs_logo02.svg)
+
+# K-Recs - A Song Recommender App
 
 ## Description
 K-Recs is a song recommender application that allows users to input a song title and receive recommendations based on the song's characteristics. The app utilizes a dataset of songs with various features and integrates with the Spotify API to fetch additional song details.
