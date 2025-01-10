@@ -6,7 +6,7 @@ load_dotenv()
 
 import streamlit as st
 import pandas as pd
-from utils.functions import get_song_recommendations
+from utils.functions import get_song_recommendations, search_track_info
 
 # Load data with caching for better performance
 @st.cache_data
@@ -22,7 +22,24 @@ songs_df = load_data()
 
 # Function to get song details by title
 def get_song_details(title, df):
-    return df[df['title'].str.lower() == title.lower()]
+    # First, try to get the song details from the dataset
+    result = df[df['title'].str.lower() == title.lower()]
+    
+    # If the song is found in the dataset, return it
+    if isinstance(result, pd.DataFrame) and not result.empty:
+        return result
+    else:
+        # If the song is not found, call the function to search on Spotify
+        spotify_data = search_track_info(title)  # You might need to adjust this depending on the function signature
+        
+        if spotify_data:
+            # Assuming spotify_data is a dictionary or some structure that contains necessary details
+            # Convert spotify data into a pandas DataFrame format that matches your dataset structure
+            spotify_df = pd.DataFrame([spotify_data])
+            return spotify_df
+        else:
+            return pd.DataFrame()
+
 
 # Function to get recommendations based on cluster
 def get_recommendations(cluster, df, exclude_title):
@@ -32,10 +49,11 @@ def display_song_details(song_row):
     """
     Display the details of a song including title, artist, album, and album cover.
     """
-    song_name = song_row['title']
-    artist_name = song_row['artist']
-    album = song_row['album']
-    release_year = song_row.get('year', 'Unknown')
+    # Ensure that necessary columns exist in the song_row before accessing them
+    song_name = song_row.get('title', 'Unknown')
+    artist_name = song_row.get('artist', 'Unknown')
+    album = song_row.get('album', 'Unknown')  # Default to 'Unknown' if not found
+    release_year = song_row.get('year', 'Unknown')  # Default to 'Unknown' if not found
     album_cover = song_row.get('album_cover', None)
 
     # Display song details
@@ -51,6 +69,7 @@ def display_song_details(song_row):
         st.markdown(f"Album: {album}")
         if release_year != 'Unknown':
             st.markdown(f"**Release Year**: {release_year}")
+
 
 # Reset the session state variables for new input
 def reset_session_state():
