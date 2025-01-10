@@ -28,11 +28,17 @@ if 'selected_song' not in st.session_state:
 songs_df = load_data()
 
 # Streamlit app UI
-st.title("Song Recommender")
-st.write("Hi there! Welcome to the Song Recommender app. Enter the name of a song, and we’ll find recommendations for you. 🎵")
+col1, col2 = st.columns([2, 7])  # Adjust the column width ratios
+with col1:
+    st.image('assets/k-recs_logo02.svg', width=350)
+
+
+st.title("A Song Recommender App!")
+st.write("Hi there! Welcome to the K-Recs Song Recomender.")
+st.write("Give us a song, and we’ll find recommendations for you. 🎵")
 
 # Input field for song title
-user_input = st.text_input("Enter a song title:", placeholder="e.g., Jingle Bells")
+user_input = st.text_input("Enter your song title:", placeholder="Your song title - e.g., Jingle Bells", label_visibility="hidden")
 
 # Submit button
 if st.button('Submit'):
