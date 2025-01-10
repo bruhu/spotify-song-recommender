@@ -37,27 +37,30 @@ def search_track_info(input_title, input_artist):
 
     return result
 
-def get_song_recommendations(song_title, artist_name, n_recommendations=5):
+def get_song_recommendations(song_title, artist_name, df, n_recommendations=5):
     """
-    Get song recommendations based on input song and optional artist name
+    Get song recommendations based on input song and optional artist name.
+    Assumes 'df' is a DataFrame containing clustered song data.
     """
-    df = pd.read_csv('data/5_clustered_dataset.csv')
-
     # Convert inputs to lowercase for matching
     song_title = song_title.strip().lower()
     artist_name = artist_name.strip().lower()
 
-    # Find the input song on spotify
-    spotify_info = search_track_info(song_title, artist_name)
-    if spotify_info is None:
-        return None
+    # Find the input song in the dataframe (matching both song title and artist name)
+    song_row = df[(df['title'].str.lower() == song_title) & (df['artist'].str.lower() == artist_name)]
 
-    # Run KMeans clustering on the result from spotify
+    if song_row.empty:
+        return None  # No match found
+
+    # Run KMeans clustering on the result
     kmeans = KMeans(n_clusters=3, random_state=42)
     cluster = kmeans.fit_predict(df[['popularity', 'album_popularity']])
 
-    # Get songs from the same cluster
-    recommendations = df[df['cluster'] == cluster]
+    # Get songs from the same cluster as the input song
+    song_cluster = song_row.iloc[0]['cluster']
+    recommendations = df[df['cluster'] == song_cluster]
+    
+    # Sample 'n_recommendations' songs from the cluster
     recommendations = recommendations.sample(min(n_recommendations, len(recommendations)))
     
     return recommendations[['title', 'artist', 'popularity', 'album_popularity']]
