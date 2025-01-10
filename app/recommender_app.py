@@ -40,76 +40,68 @@ def get_song_details(title, df):
         )  # Ensure this function is correctly defined and imported
 
         if spotify_data is not None:
-            # Assuming spotify_data is a dictionary or some structure that contains necessary details
-            # Convert spotify data into a pandas DataFrame format that matches your dataset structure
-            spotify_df = pd.DataFrame([spotify_data])
-            return spotify_df
+            # Return the Spotify data directly
+            return pd.DataFrame([spotify_data])  # Return as DataFrame
         else:
             return pd.DataFrame()  # Return an empty DataFrame if no data is found
 
 
-# Function to get recommendations based on cluster
-# def get_recommendations(title, artist, genres, df):
-#     """
-#     Get song recommendations based on title, artist, and genres.
-#     """
-#     # Initialize an empty DataFrame for recommendations
-#     recommendations = pd.DataFrame()
-
-#     # First, try to find recommendations based on genres
-#     if genres:
-#         recommendations = df[
-#             df["genres"].str.contains("|".join(genres), case=False, na=False)
-#             & (df["title"].str.lower() != title.lower())
-#         ]
-#         st.write(f"Recommendations found based on genres: {recommendations.shape[0]}")
-
-#     # If no recommendations found based on genres, try by artist
-#     if recommendations.empty and artist:
-#         recommendations = df[
-#             (df["artist"].str.lower() == artist.lower())
-#             & (df["title"].str.lower() != title.lower())
-#         ]
-#         st.write(f"Recommendations found based on artist: {recommendations.shape[0]}")
-
-#     # If still no recommendations, try by title similarity (fuzzy matching)
-#     if recommendations.empty:
-#         recommendations = df[
-#             df["title"].str.contains(title, case=False, na=False)
-#             & (df["title"].str.lower() != title.lower())
-#         ]
-#         st.write(
-#             f"Recommendations found based on title similarity: {recommendations.shape[0]}"
-#         )
-
-#     # If still no recommendations, try to find songs in the same cluster (if applicable)
-#     if recommendations.empty:
-#         # Get the cluster of the original song if available
-#         song_row = df[df["title"].str.lower() == title.lower()]
-#         if not song_row.empty:
-#             cluster = song_row.iloc[0].get("cluster", None)
-#             if cluster is not None:
-#                 recommendations = df[
-#                     (df["cluster"] == cluster)
-#                     & (df["title"].str.lower() != title.lower())
-#                 ]
-#                 st.write(
-#                     f"Recommendations found based on cluster: {recommendations.shape[0]}"
-#                 )
-
-#     # Limit to 10 recommendations
-#     recommendations = recommendations.head(10)
-
-
 #     return recommendations
-def get_recommendations(df):
+def get_recommendations(df, song_row):
     """
-    Get 5 random song recommendations.
+    Get 5 random song recommendations based on the characteristics of the input song.
     """
-    # Randomly sample 5 recommendations from the DataFrame
-    recommendations = df.sample(
-        n=5, random_state=1
-    )  # Set random_state for reproducibility
+    # Extract characteristics from the input song
+    artist = song_row["artist"].values[0]
+
+    # Check if genres is a list or a string and handle accordingly
+    genres = song_row["genres"].values[0]
+    if isinstance(genres, str):
+        genres = genres.split(",")  # Split string into a list
+    elif not isinstance(genres, list):
+        genres = []  # Default to empty list if genres is neither
+
+    release_year = song_row["year"].values[0] if "year" in song_row.columns else None
+
+    # Filter recommendations based on artist, genres, or release year
+    filtered_recommendations = df[
+        df["title"].str.lower()
+        != song_row["title"].values[0].lower()  # Exclude the selected song
+    ]
+
+    if genres:
+        # Filter by genres
+        filtered_recommendations = filtered_recommendations[
+            filtered_recommendations["genres"].str.contains(
+                "|".join(genres), case=False, na=False
+            )
+        ]
+
+    if artist:
+        # Further filter by artist if no recommendations found yet
+        if filtered_recommendations.empty:
+            filtered_recommendations = df[
+                (df["artist"].str.lower() == artist.lower())
+                & (df["title"].str.lower() != song_row["title"].values[0].lower())
+            ]
+
+    if release_year:
+        # Further filter by release year if no recommendations found yet
+        if filtered_recommendations.empty:
+            filtered_recommendations = df[
+                (df["year"] == release_year)
+                & (df["title"].str.lower() != song_row["title"].values[0].lower())
+            ]
+
+    # Randomly sample 5 recommendations from the filtered DataFrame
+    if not filtered_recommendations.empty:
+        recommendations = filtered_recommendations.sample(
+            n=min(5, len(filtered_recommendations)), random_state=1
+        )
+    else:
+        recommendations = (
+            pd.DataFrame()
+        )  # Return an empty DataFrame if no recommendations found
 
     return recommendations
 
@@ -124,7 +116,7 @@ def display_recommendations(recommendations):
             col1, col2 = st.columns([1, 3])  # Create two columns for layout
             with col1:
                 if row.get("album_cover"):
-                    st.image(row["album_cover"], width=100)  # Display album cover
+                    st.image(row["album_cover"], width=180)  # Display album cover
                 else:
                     st.write("No album cover available.")
             with col2:
@@ -222,23 +214,38 @@ if st.session_state["submit_pressed"]:
             # Ask if this is the correct song
             st.write("---")
             st.write("Is this the correct song?")
-            col_yes, col_no = st.columns(2)
 
-            with col_yes:
-                if st.button("Yes, this is the one!", key="yes_button"):
-                    # Get random recommendations
-                    recommended_songs = get_recommendations(
-                        songs_df
-                    )  # Call with only the DataFrame
+            # Check if the song has been confirmed
+            if "song_confirmed" not in st.session_state:
+                st.session_state["song_confirmed"] = False
 
-                    # Display the recommendations
-                    display_recommendations(recommended_songs)
+            if not st.session_state["song_confirmed"]:
+                col_yes, col_no = st.columns(2)
 
-            with col_no:
-                if st.button("No, re-enter input", key="no_button"):
-                    # Reset session state and pre-fill input
-                    reset_session_state()
-                    prefill_input(user_input, songs_df)
+                with col_yes:
+                    if st.button("Yes, this is the one!", key="yes_button"):
+                        # Set the session state to indicate the song has been confirmed
+                        st.session_state["song_confirmed"] = True
+
+                        # Get random recommendations
+                        recommended_songs = get_recommendations(
+                            songs_df, song_row  # Pass the song_row directly
+                        )  # Call with only the DataFrame
+
+                        # Display the recommendations
+                        display_recommendations(recommended_songs)
+
+                with col_no:
+                    if st.button("No, re-enter input", key="no_button"):
+                        # Reset session state and pre-fill input
+                        reset_session_state()
+                        prefill_input(user_input, songs_df)
+            else:
+                # If the song has been confirmed, display the recommendations
+                recommended_songs = get_recommendations(
+                    songs_df
+                )  # Call with only the DataFrame
+                display_recommendations(recommended_songs)
 
         else:
             st.write(f"Sorry, '{user_input}' not found in the database.")
