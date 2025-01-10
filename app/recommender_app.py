@@ -201,54 +201,48 @@ if st.button("Submit"):
     st.session_state["submit_pressed"] = True
     st.session_state["selected_song"] = user_input
 
-# If the Submit button was pressed
+
+# Function to handle song confirmation and display recommendations
+def handle_song_confirmation(song_row):
+    """Handle the confirmation of the song and display recommendations."""
+    st.write("---")  # Optional: Add a separator line
+    recommended_songs = get_recommendations(
+        songs_df, song_row
+    )  # Pass the song_row directly
+    display_recommendations(recommended_songs)
+
+
+# Function to display song details and confirmation buttons
+def display_song_confirmation(song_row):
+    """Display song details and confirmation buttons."""
+    display_song_details(song_row.iloc[0])
+    st.write("---")
+    st.write("Is this the correct song?")
+
+    col_yes, col_no = st.columns(2)
+
+    with col_yes:
+        if st.button("Yes, this is the one!", key="yes_button"):
+            st.session_state["song_confirmed"] = True
+            handle_song_confirmation(
+                song_row
+            )  # Call the function to handle confirmation
+
+    with col_no:
+        if st.button("No, re-enter input", key="no_button"):
+            reset_session_state()
+            prefill_input(user_input, songs_df)
+
+
+# Main logic for handling user input and displaying results
 if st.session_state["submit_pressed"]:
     user_input = st.session_state["selected_song"]
     if user_input:
-        # Get song details
         song_row = get_song_details(user_input, songs_df)
         if not song_row.empty:
-            # Display song details
-            display_song_details(song_row.iloc[0])
-
-            # Ask if this is the correct song
-            st.write("---")
-            st.write("Is this the correct song?")
-
-            # Check if the song has been confirmed
-            if "song_confirmed" not in st.session_state:
-                st.session_state["song_confirmed"] = False
-
-            if not st.session_state["song_confirmed"]:
-                col_yes, col_no = st.columns(2)
-
-                with col_yes:
-                    if st.button("Yes, this is the one!", key="yes_button"):
-                        # Set the session state to indicate the song has been confirmed
-                        st.session_state["song_confirmed"] = True
-
-                        # Get random recommendations
-                        recommended_songs = get_recommendations(
-                            songs_df, song_row  # Pass the song_row directly
-                        )  # Call with only the DataFrame
-
-                        # Display the recommendations
-                        display_recommendations(recommended_songs)
-
-                with col_no:
-                    if st.button("No, re-enter input", key="no_button"):
-                        # Reset session state and pre-fill input
-                        reset_session_state()
-                        prefill_input(user_input, songs_df)
-            else:
-                # If the song has been confirmed, clear the confirmation message
-                st.write("---")  # Optional: Add a separator line
-                # Display the recommendations
-                recommended_songs = get_recommendations(
-                    songs_df, song_row  # Pass the song_row directly
-                )
-                display_recommendations(recommended_songs)
-
+            display_song_confirmation(
+                song_row
+            )  # Call the new function to display confirmation
         else:
             st.write(f"Sorry, '{user_input}' not found in the database.")
             suggestions = songs_df[
