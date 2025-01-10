@@ -96,7 +96,7 @@ def get_recommendations(df, song_row):
     # Randomly sample 5 recommendations from the filtered DataFrame
     if not filtered_recommendations.empty:
         recommendations = filtered_recommendations.sample(
-            n=min(5, len(filtered_recommendations)), random_state=1
+            n=min(10, len(filtered_recommendations)), random_state=1
         )
     else:
         recommendations = (
@@ -113,10 +113,10 @@ def display_recommendations(recommendations):
     if not recommendations.empty:
         st.write("### Recommended Songs:")
         for idx, row in recommendations.iterrows():
-            col1, col2 = st.columns([1, 3])  # Create two columns for layout
+            col1, col2 = st.columns([3, 7])  # Create two columns for layout
             with col1:
                 if row.get("album_cover"):
-                    st.image(row["album_cover"], width=180)  # Display album cover
+                    st.image(row["album_cover"], width=200)  # Display album cover
                 else:
                     st.write("No album cover available.")
             with col2:
@@ -126,6 +126,7 @@ def display_recommendations(recommendations):
                     st.markdown(f"Album: {row['album']}")
                 if "year" in row and row["year"] != "Unknown":
                     st.markdown(f"**Release Year**: {row['year']}")
+
     else:
         st.write("No recommendations found.")
 
