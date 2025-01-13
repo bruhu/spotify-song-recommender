@@ -172,3 +172,10 @@ cython_debug/
 
 # Add local data directory
 data/local/
+
+# Streamlit configuration
+.streamlit/
+
+# Other files to ignore
+*.env
+*.DS_Store

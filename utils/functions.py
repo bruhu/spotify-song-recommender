@@ -6,14 +6,8 @@ from sklearn.cluster import KMeans
 import streamlit as st
 
 
-def search_track_info(input_title):
+def search_track_info(input_title, client_id, client_secret):
     """Fetch song details from Spotify including song title, album cover, album name, release date, and genres."""
-
-    # Get Spotify client credentials from environment or secrets
-    client_id = os.getenv("SPOTIFY_CLIENT_ID") or st.secrets["SPOTIFY_CLIENT_ID"]
-    client_secret = (
-        os.getenv("SPOTIFY_CLIENT_SECRET") or st.secrets["SPOTIFY_CLIENT_SECRET"]
-    )
 
     # Initialize Spotipy with client credentials
     sp = spotipy.Spotify(

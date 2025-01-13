@@ -2,10 +2,6 @@ import sys
 
 sys.path.append(".")
 
-from dotenv import load_dotenv
-
-load_dotenv()
-
 import streamlit as st
 import pandas as pd
 from utils.functions import get_song_recommendations, search_track_info
@@ -24,6 +20,10 @@ def load_data():
 # Load the dataset
 songs_df = load_data()
 
+# Get Spotify client credentials from secrets.toml
+client_id = st.secrets["SPOTIFY_CLIENT_ID"]
+client_secret = st.secrets["SPOTIFY_CLIENT_SECRET"]
+
 
 # Function to get song details by title
 def get_song_details(title, df):
@@ -36,8 +36,8 @@ def get_song_details(title, df):
     else:
         # If the song is not found, call the function to search on Spotify
         spotify_data = search_track_info(
-            title
-        )  # Ensure this function is correctly defined and imported
+            title, client_id, client_secret
+        )  # Pass credentials
 
         if spotify_data is not None:
             # Return the Spotify data directly
